@@ -26,7 +26,7 @@
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             padding: 40px;
-            max-width: 500px;
+            max-width: 600px;
             width: 100%;
         }
         
@@ -49,6 +49,7 @@
             margin-bottom: 8px;
             font-weight: bold;
             color: #333;
+            font-size: 14px;
         }
         
         .config-section input {
@@ -56,9 +57,10 @@
             padding: 12px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
             margin-bottom: 15px;
             transition: border-color 0.3s;
+            font-family: monospace;
         }
         
         .config-section input:focus {
@@ -146,6 +148,7 @@
             text-align: center;
             display: none;
             word-wrap: break-word;
+            white-space: pre-line;
         }
         
         .status.show {
@@ -201,22 +204,40 @@
             border: 1px solid #ffeaa7;
         }
         
-        .note ol {
+        .note ol, .note ul {
             margin-left: 20px;
             margin-top: 10px;
         }
         
         .note li {
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            line-height: 1.5;
         }
         
         .note a {
             color: #667eea;
             text-decoration: none;
+            font-weight: bold;
         }
         
         .note a:hover {
             text-decoration: underline;
+        }
+        
+        .note code {
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .warning {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
         }
     </style>
 </head>
@@ -224,9 +245,16 @@
     <div class="container">
         <h1>📤 Upload ke Google Drive</h1>
         
+        <div class="warning">
+            <strong>⚠️ Penting:</strong> Untuk mengatasi error OAuth, pastikan OAuth Consent Screen sudah dikonfigurasi dengan benar (lihat panduan di bawah).
+        </div>
+        
         <div class="config-section">
             <label for="clientId">Google Client ID:</label>
-            <input type="text" id="clientId" placeholder="xxx.apps.googleusercontent.com">
+            <input type="text" id="clientId" placeholder="xxxxx.apps.googleusercontent.com">
+            
+            <label for="apiKey">Google API Key:</label>
+            <input type="text" id="apiKey" placeholder="AIzaSyxxxxxxxxxxxxxxxxxxxxxx">
             
             <button id="authBtn" onclick="handleAuth()">🔐 Login dengan Google</button>
         </div>
@@ -253,91 +281,164 @@
         <div class="status" id="status"></div>
         
         <div class="note">
-            <strong>⚠️ Setup Google Cloud Console:</strong>
+            <strong>📋 Cara Setup Google Cloud Console (Penting!):</strong>
             <ol>
-                <li>Buka <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
-                <li>Buat project baru atau pilih yang ada</li>
-                <li>Aktifkan <strong>Google Drive API</strong> di Library</li>
-                <li>Buat <strong>OAuth 2.0 Client ID</strong>:
-                    <ul style="margin-top: 5px;">
-                        <li>Type: Web application</li>
-                        <li>Authorized JavaScript origins: <code>http://localhost</code> atau domain Anda</li>
-                        <li>Authorized redirect URIs: <code>http://localhost</code> atau domain Anda</li>
+                <li><strong>Buat Project:</strong>
+                    <br>Buka <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> → New Project
+                </li>
+                
+                <li><strong>Aktifkan Google Drive API:</strong>
+                    <br>APIs & Services → Library → Cari "Google Drive API" → Enable
+                </li>
+                
+                <li><strong>Buat API Key:</strong>
+                    <br>APIs & Services → Credentials → Create Credentials → API Key
+                    <br>Copy API Key tersebut
+                </li>
+                
+                <li><strong>Buat OAuth 2.0 Client ID:</strong>
+                    <br>Credentials → Create Credentials → OAuth client ID
+                    <ul>
+                        <li>Application type: <strong>Web application</strong></li>
+                        <li>Authorized JavaScript origins: 
+                            <br><code>http://localhost:8000</code> atau domain Anda
+                        </li>
+                        <li>Authorized redirect URIs: 
+                            <br><code>http://localhost:8000</code> atau domain Anda
+                        </li>
+                    </ul>
+                    Copy Client ID tersebut
+                </li>
+                
+                <li><strong>⚠️ Konfigurasi OAuth Consent Screen (INI YANG PENTING!):</strong>
+                    <br>APIs & Services → OAuth consent screen
+                    <ul>
+                        <li>User Type: Pilih <strong>"External"</strong> lalu Create</li>
+                        <li>App name: Isi nama aplikasi Anda</li>
+                        <li>User support email: Isi email Anda</li>
+                        <li>Developer contact: Isi email Anda</li>
+                        <li>Klik Save and Continue</li>
+                        <li><strong>Scopes:</strong> Klik "Add or Remove Scopes"
+                            <br>Cari dan tambahkan: <code>../auth/drive.file</code>
+                        </li>
+                        <li><strong>Test users:</strong> Tambahkan email Google Anda sendiri sebagai test user!</li>
+                        <li>Klik Save and Continue sampai selesai</li>
                     </ul>
                 </li>
-                <li>Salin Client ID dan paste di atas</li>
+                
+                <li><strong>Paste Credentials:</strong>
+                    <br>Copy Client ID dan API Key ke form di atas
+                </li>
             </ol>
+            
+            <p style="margin-top: 15px; font-weight: bold; color: #d9534f;">
+                ⚠️ Catatan: Jika masih error 400, pastikan:
+            </p>
+            <ul>
+                <li>Email Anda sudah ditambahkan sebagai <strong>Test User</strong></li>
+                <li>OAuth Consent Screen sudah di-save</li>
+                <li>Scope <code>../auth/drive.file</code> sudah ditambahkan</li>
+                <li>URL yang digunakan sudah terdaftar di Authorized origins</li>
+            </ul>
         </div>
     </div>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js"></script>
     <script>
         const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+        const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+        
         let tokenClient;
         let accessToken = null;
         let selectedFile = null;
+        let gapiInited = false;
+        let gisInited = false;
         
-        // Initialize Google Identity Services
-        window.onload = function() {
-            google.accounts.id.initialize({
-                client_id: document.getElementById('clientId').value,
-                callback: handleCredentialResponse
-            });
-        };
+        // Load and initialize GAPI
+        function gapiLoaded() {
+            gapi.load('client', initializeGapiClient);
+        }
         
-        function handleCredentialResponse(response) {
-            console.log("Encoded JWT ID token: " + response.credential);
+        async function initializeGapiClient() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            if (!apiKey) return;
+            
+            try {
+                await gapi.client.init({
+                    apiKey: apiKey,
+                    discoveryDocs: [DISCOVERY_DOC],
+                });
+                gapiInited = true;
+            } catch (error) {
+                console.error('Error initializing GAPI:', error);
+            }
+        }
+        
+        // Initialize GIS
+        function gisLoaded() {
+            gisInited = true;
         }
         
         // Handle authentication
-        function handleAuth() {
+        async function handleAuth() {
             const clientId = document.getElementById('clientId').value.trim();
+            const apiKey = document.getElementById('apiKey').value.trim();
             
             if (!clientId || !clientId.includes('apps.googleusercontent.com')) {
-                showStatus('❌ Masukkan Client ID yang valid!', 'error');
+                showStatus('❌ Client ID tidak valid!', 'error');
                 return;
+            }
+            
+            if (!apiKey || !apiKey.startsWith('AIza')) {
+                showStatus('❌ API Key tidak valid!', 'error');
+                return;
+            }
+            
+            // Initialize GAPI with API key
+            if (!gapiInited) {
+                await initializeGapiClient();
             }
             
             try {
                 tokenClient = google.accounts.oauth2.initTokenClient({
                     client_id: clientId,
                     scope: SCOPES,
-                    callback: (tokenResponse) => {
-                        if (tokenResponse && tokenResponse.access_token) {
-                            accessToken = tokenResponse.access_token;
-                            showStatus('✅ Login berhasil!', 'success');
-                            document.getElementById('authBtn').textContent = '✅ Sudah Login';
-                            document.getElementById('authBtn').disabled = true;
-                            document.getElementById('clientId').disabled = true;
-                            
-                            // Enable upload area
-                            const uploadArea = document.getElementById('uploadArea');
-                            uploadArea.classList.remove('disabled');
-                            uploadArea.querySelector('p:last-child').textContent = 'Semua jenis file diperbolehkan';
-                        } else {
-                            showStatus('❌ Login gagal. Coba lagi.', 'error');
+                    callback: async (response) => {
+                        if (response.error !== undefined) {
+                            showStatus('❌ Error: ' + response.error + '\n\nPastikan:\n1. Email Anda sudah ditambahkan sebagai Test User\n2. OAuth Consent Screen sudah dikonfigurasi\n3. Scope drive.file sudah ditambahkan', 'error');
+                            return;
                         }
+                        
+                        accessToken = response.access_token;
+                        showStatus('✅ Login berhasil!', 'success');
+                        
+                        document.getElementById('authBtn').textContent = '✅ Sudah Login';
+                        document.getElementById('authBtn').disabled = true;
+                        document.getElementById('clientId').disabled = true;
+                        document.getElementById('apiKey').disabled = true;
+                        
+                        // Enable upload area
+                        const uploadArea = document.getElementById('uploadArea');
+                        uploadArea.classList.remove('disabled');
+                        uploadArea.querySelector('p:last-child').textContent = 'Semua jenis file diperbolehkan';
                     },
-                    error_callback: (error) => {
-                        console.error('Error:', error);
-                        showStatus('❌ Error: ' + (error.message || 'Login gagal'), 'error');
-                    }
                 });
                 
-                if (tokenClient) {
-                    tokenClient.requestAccessToken({prompt: ''});
-                }
+                // Request access token
+                tokenClient.requestAccessToken({prompt: 'consent'});
+                
             } catch (error) {
                 console.error('Auth error:', error);
-                showStatus('❌ Error inisialisasi: ' + error.message, 'error');
+                showStatus('❌ Error: ' + error.message, 'error');
             }
         }
         
-        // File input handling
+        // File handling
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         
-        uploadArea.addEventListener('click', (e) => {
+        uploadArea.addEventListener('click', () => {
             if (!uploadArea.classList.contains('disabled')) {
                 fileInput.click();
             }
@@ -400,7 +501,6 @@
             showProgress(10);
             
             try {
-                // Step 1: Create metadata
                 const metadata = {
                     name: selectedFile.name,
                     mimeType: selectedFile.type || 'application/octet-stream'
@@ -408,7 +508,6 @@
                 
                 showProgress(30);
                 
-                // Step 2: Upload using multipart
                 const form = new FormData();
                 form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
                 form.append('file', selectedFile);
@@ -427,15 +526,14 @@
                 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
+                    throw new Error(errorData.error?.message || `HTTP ${response.status}`);
                 }
                 
                 const result = await response.json();
                 showProgress(100);
                 
-                showStatus(`✅ Upload berhasil!\nFile: ${result.name}\nID: ${result.id}`, 'success');
+                showStatus(`✅ Upload berhasil!\n\nFile: ${result.name}\nID: ${result.id}\n\nFile sudah tersimpan di Google Drive Anda!`, 'success');
                 
-                // Reset after 5 seconds
                 setTimeout(() => {
                     selectedFile = null;
                     fileInput.value = '';
@@ -464,6 +562,12 @@
             progressBar.classList.add('show');
             progressFill.style.width = percent + '%';
         }
+        
+        // Initialize on load
+        window.addEventListener('load', () => {
+            gapiLoaded();
+            gisLoaded();
+        });
     </script>
 </body>
 </html>
