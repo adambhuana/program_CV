@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OAuth Callback</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #f3f4f6;
+    }
+    pre {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      max-width: 500px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h2>OAuth Callback</h2>
+  <p>Menunggu respon dari Google...</p>
+  <pre id="output"></pre>
+
+  <script>
+    // Ambil parameter dari URL (misalnya code, state, error)
+    const params = new URLSearchParams(window.location.search);
+    const output = document.getElementById("output");
+
+    if (params.has("error")) {
+      output.textContent = "Error: " + params.get("error");
+    } else if (params.has("code")) {
+      const code = params.get("code");
+      output.textContent = "Authorization code:\n" + code;
+
+      // Di aplikasi nyata, kirim 'code' ini ke server backend
+      // untuk ditukar dengan access token.
+      // Contoh (opsional):
+      // fetch('/exchange_token', { method: 'POST', body: JSON.stringify({ code }) })
+    } else if (params.has("credential")) {
+      // Jika kamu pakai Google Identity Services (One Tap)
+      const credential = params.get("credential");
+      output.textContent = "Google Credential (JWT):\n" + credential;
+    } else {
+      output.textContent = "Tidak ada kode atau token ditemukan di URL.";
+    }
+  </script>
+</body>
+</html>
