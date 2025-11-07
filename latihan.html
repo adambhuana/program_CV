@@ -570,409 +570,206 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        // ⚠️ KONFIGURASI SUPABASE - GANTI DENGAN KREDENSIAL ANDA
-       const SUPABASE_URL = 'https://hatsthxismcmiyqbbngq.supabase.co';
-       const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhdHN0aHhpc21jbWl5cWJibmdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MDk2ODksImV4cCI6MjA3MDQ4NTY4OX0._AKeQOYM94Tshs42rEO7FQheZkkkkULOLuTgQWOMzsY';
-        
-        let supabase = null;
-        let currentUser = null;
-        let skills = [];
-        
-        // Initialize and Check Connection
-        async function initializeApp() {
-            try {
-                // Validate config
-                if (SUPABASE_URL === 'https://your-project.supabase.co' || SUPABASE_KEY === 'your-anon-key-here') {
-                    throw new Error('Kredensial Supabase belum diisi! Silakan update SUPABASE_URL dan SUPABASE_KEY di kode.');
-                }
-                
-                // Initialize Supabase
-                supabase = supabase_js.createClient(SUPABASE_URL, SUPABASE_KEY);
-                
-                // Test connection with simple query
-                const { data, error } = await supabase
-                    .from('job_seekers')
-                    .select('count')
-                    .limit(1);
-                
-                if (error) {
-                    throw new Error('Koneksi gagal: ' + error.message);
-                }
-                
-                // Connection successful
-                showMainApp();
-                
-            } catch (error) {
-                showConnectionError(error.message);
-            }
-        }
-        
-        function showMainApp() {
-            document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('connectionError').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-        }
-        
-        function showConnectionError(message) {
-            document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('connectionError').style.display = 'block';
-            document.getElementById('errorMessage').innerHTML = message;
-        }
-        
-        function retryConnection() {
-            document.getElementById('connectionError').style.display = 'none';
-            document.getElementById('loadingScreen').style.display = 'block';
-            setTimeout(initializeApp, 500);
-        }
-        
-        // Wait for page load
-        window.addEventListener('load', function() {
-            setTimeout(initializeApp, 1000);
-        });
-        
-        // Switch Auth Tab
-        function switchAuthTab(tab) {
-            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            document.querySelectorAll('.auth-content').forEach(c => c.classList.remove('active'));
-            document.getElementById(tab + 'Form').classList.add('active');
-            
-            hideAllStatus();
-        }
-        
-        // Skills Management
-        function addSkill() {
-            const input = document.getElementById('skillInput');
-            const skill = input.value.trim();
-            
-            if (skill && !skills.includes(skill)) {
-                skills.push(skill);
-                renderSkills();
-                input.value = '';
-            }
-        }
-        
-        function removeSkill(skill) {
-            skills = skills.filter(s => s !== skill);
-            renderSkills();
-        }
-        
-        function renderSkills() {
-            const container = document.getElementById('skillsList');
-            if (skills.length === 0) {
-                container.innerHTML = '<p style="color: #999; font-size: 13px;">Belum ada skill ditambahkan</p>';
-                return;
-            }
-            container.innerHTML = skills.map(skill => `
-                <div class="skill-tag">
-                    ${skill}
-                    <button type="button" onclick="removeSkill('${skill.replace(/'/g, "\\'")}')">×</button>
-                </div>
-            `).join('');
-        }
-        
-        // Register
-        async function register() {
-            const email = document.getElementById('regEmail').value.trim();
-            const password = document.getElementById('regPassword').value;
-            const fullName = document.getElementById('regFullName').value.trim();
-            
-            if (!email || !password || !fullName) {
-                showStatus('registerStatus', '❌ Email, password, dan nama lengkap wajib diisi!', 'error');
-                return;
-            }
-            
-            if (password.length < 6) {
-                showStatus('registerStatus', '❌ Password minimal 6 karakter!', 'error');
-                return;
-            }
-            
-            showStatus('registerStatus', '⏳ Mendaftarkan akun...', 'info');
-            
-            try {
-                const passwordHash = btoa(password);
-                const activationToken = generateToken();
-                const activationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-                
-                const { data, error } = await supabase
-                    .from('job_seekers')
-                    .insert([{
-                        email: email,
-                        password_hash: passwordHash,
-                        full_name: fullName,
-                        phone: document.getElementById('regPhone').value || null,
-                        date_of_birth: document.getElementById('regDOB').value || null,
-                        gender: document.getElementById('regGender').value || null,
-                        address: document.getElementById('regAddress').value || null,
-                        city: document.getElementById('regCity').value || null,
-                        province: document.getElementById('regProvince').value || null,
-                        education_level: document.getElementById('regEducation').value || null,
-                        major: document.getElementById('regMajor').value || null,
-                        university: document.getElementById('regUniversity').value || null,
-                        graduation_year: parseInt(document.getElementById('regGradYear').value) || null,
-                        skills: skills.length > 0 ? skills : null,
-                        work_experience: parseInt(document.getElementById('regExperience').value) || 0,
-                        expected_salary: parseInt(document.getElementById('regSalary').value) || null,
-                        is_active: false,
-                        activation_token: activationToken,
-                        activation_token_expires: activationExpires
-                    }])
-                    .select();
-                
-                if (error) {
-                    if (error.code === '23505') {
-                        throw new Error('Email sudah terdaftar!');
-                    }
-                    throw error;
-                }
-                
-                showStatus('registerStatus', 
-                    `✅ Registrasi berhasil!\n\n` +
-                    `📧 Token Aktivasi Anda:\n${activationToken}\n\n` +
-                    `⚠️ Simpan token ini!\n` +
-                    `Untuk aktivasi, jalankan query di Supabase SQL Editor:\n\n` +
-                    `UPDATE job_seekers SET is_active = true WHERE activation_token = '${activationToken}';\n\n` +
-                    `Token berlaku 24 jam.`, 
-                    'success'
-                );
-                
-                clearRegisterForm();
-                
-            } catch (error) {
-                showStatus('registerStatus', '❌ Error: ' + error.message, 'error');
-            }
-        }
-        
-        // Login
-        async function login() {
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            
-            if (!email || !password) {
-                showStatus('loginStatus', '❌ Email dan password wajib diisi!', 'error');
-                return;
-            }
-            
-            showStatus('loginStatus', '⏳ Login...', 'info');
-            
-            try {
-                const passwordHash = btoa(password);
-                
-                const { data, error } = await supabase
-                    .from('job_seekers')
-                    .select('*')
-                    .eq('email', email)
-                    .eq('password_hash', passwordHash)
-                    .single();
-                
-                if (error || !data) {
-                    throw new Error('Email atau password salah!');
-                }
-                
-                if (!data.is_active) {
-                    showStatus('loginStatus', 
-                        '⚠️ Akun belum diaktivasi!\n\n' +
-                        'Silakan aktifkan akun Anda terlebih dahulu menggunakan token yang dikirim saat registrasi.\n\n' +
-                        'Jalankan query di Supabase SQL Editor:\n' +
-                        'UPDATE job_seekers SET is_active = true WHERE email = \'' + email + '\';', 
-                        'error'
-                    );
-                    return;
-                }
-                
-                currentUser = data;
-                
-                await supabase
-                    .from('job_seekers')
-                    .update({ last_login: new Date().toISOString() })
-                    .eq('id', data.id);
-                
-                showStatus('loginStatus', '✅ Login berhasil!', 'success');
-                
-                setTimeout(() => {
-                    showProfile();
-                }, 1000);
-                
-            } catch (error) {
-                showStatus('loginStatus', '❌ ' + error.message, 'error');
-            }
-        }
-        
-        // Show Profile
-        function showProfile() {
-            document.getElementById('authSection').style.display = 'none';
-            document.getElementById('profileSection').classList.add('active');
-            loadProfile();
-        }
-        
-        // Load Profile
-        async function loadProfile() {
-            if (!currentUser) return;
-            
-            const { data: applications } = await supabase
-                .from('job_applications')
-                .select('*')
-                .eq('job_seeker_id', currentUser.id)
-                .order('application_date', { ascending: false });
-            
-            document.getElementById('profileContent').innerHTML = `
-                <div class="profile-card">
-                    <h3>👤 Informasi Pribadi</h3>
-                    <div class="profile-item">
-                        <span class="profile-label">Nama:</span>
-                        <span class="profile-value">${currentUser.full_name}</span>
-                    </div>
-                    <div class="profile-item">
-                        <span class="profile-label">Email:</span>
-                        <span class="profile-value">${currentUser.email}</span>
-                    </div>
-                    <div class="profile-item">
-                        <span class="profile-label">Telepon:</span>
-                        <span class="profile-value">${currentUser.phone || '-'}</span>
-                    </div>
-                    <div class="profile-item">
-                        <span class="profile-label">Jenis Kelamin:</span>
-                        <span class="profile-value">${currentUser.gender || '-'}</span>
-                    </div>
-                    <div class="profile-item">
-                        <span class="profile-label">Alamat:</span>
-                        <span class="profile-value">${currentUser.city ? currentUser.city + ', ' + currentUser.province : '-'}</span>
-                    </div>
-                    <div class="profile-item">
-                        <span class="profile-label">Status Akun:</span>
-                        <span class="profile-value" style="color: #28a745; font-weight: bold;">✅ Aktif</span>
-                    </div>
-                </div>
-                
-                <div class="profile-card">
-                    <h3>🎓 Pendidikan</h3>
-                    <div class="profile-item">
-                        <span class="profile-label">Pendidikan:</span>
-                        <span class="profile-value">${currentUser.education_level || '-'}</span>
-                    </div>
-                    <div class="profile-item">
-                        <span class="profile-label">Jurusan:</span>
-                        <span class="profile-value">${currentUser.major || '-'}</span>
-                    </div>
-                    <div class="profile-item">
-                        <span class="profile-label">Universitas:</span>
-                        <span class="profile-value">${currentUser.university || '-'}</span>
-                    </div>
-                    <div class="profile-item">
-                        <span class="profile-label">Tahun Lulus:</span>
-                        <span class="profile-value">${currentUser.graduation_year || '-'}</span>
-                    </div>
-                </div>
-                
-                <div class="profile-card">
-                    <h3>💼 Karir</h3>
-                    <div class="profile-item">
-                        <span class="profile-label">Pengalaman:</span>
-                        <span class="profile-value">${currentUser.work_experience} tahun</span>
-                    </div>
-                    <div class="profile-item">
-                        <span class="profile-label">Gaji Diharapkan:</span>
-                        <span class="profile-value">${currentUser.expected_salary ? 'Rp ' + currentUser.expected_salary.toLocaleString('id-ID') : '-'}</span>
-                    </div>
-                    <div class="profile-item" style="display: block;">
-                        <span class="profile-label" style="margin-bottom: 10px;">Skills:</span>
-                        <div class="skills-list">
-                            ${currentUser.skills && currentUser.skills.length > 0 ? 
-                                currentUser.skills.map(skill => `<div class="skill-tag">${skill}</div>`).join('') : 
-                                '<span style="color: #999; font-size: 13px;">Belum ada skills</span>'}
-                        </div>
-                    </div>
-                </div>
-                
-                ${applications && applications.length > 0 ? `
-                <div class="profile-card">
-                    <h3>📝 Riwayat Lamaran (${applications.length})</h3>
-                    ${applications.map(app => `
-                        <div class="profile-item" style="display: block; padding: 15px 0;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <strong style="color: #667eea;">${app.company_name}</strong>
-                                <span style="font-size: 12px; color: #999;">${new Date(app.application_date).toLocaleDateString('id-ID')}</span>
-                            </div>
-                            <div style="color: #666; margin-bottom: 5px;">${app.position}</div>
-                            <div>
-                                <span style="padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; 
-                                    ${app.status === 'accepted' ? 'background: #d4edda; color: #155724;' : 
-                                      app.status === 'rejected' ? 'background: #f8d7da; color: #721c24;' : 
-                                      app.status === 'interview' ? 'background: #d1ecf1; color: #0c5460;' : 
-                                      'background: #fff3cd; color: #856404;'}">
-                                    ${app.status === 'accepted' ? '✅ Diterima' : 
-                                      app.status === 'rejected' ? '❌ Ditolak' : 
-                                      app.status === 'interview' ? '📞 Interview' : 
-                                      '⏳ Pending'}
-                                </span>
-                            </div>
-                            ${app.notes ? `<div style="margin-top: 8px; font-size: 13px; color: #666; font-style: italic;">${app.notes}</div>` : ''}
-                        </div>
-                    `).join('')}
-                </div>
-                ` : ''}
-            `;
-        }
-        
-        // Logout
-        function logout() {
-            currentUser = null;
-            document.getElementById('profileSection').classList.remove('active');
-            document.getElementById('authSection').style.display = 'block';
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('loginPassword').value = '';
-            hideAllStatus();
-            showStatus('loginStatus', '✅ Logout berhasil!', 'success');
-        }
-        
-        // Utilities
-        function generateToken() {
-            return Math.random().toString(36).substr(2, 9) + Math.random().toString(36).substr(2, 9);
-        }
-        
-        function showStatus(elementId, message, type) {
-            const statusElement = document.getElementById(elementId);
-            statusElement.textContent = message;
-            statusElement.className = 'status show ' + type;
-        }
-        
-        function hideAllStatus() {
-            document.querySelectorAll('.status').forEach(el => el.classList.remove('show'));
-        }
-        
-        function clearRegisterForm() {
-            document.getElementById('regEmail').value = '';
-            document.getElementById('regPassword').value = '';
-            document.getElementById('regFullName').value = '';
-            document.getElementById('regPhone').value = '';
-            document.getElementById('regDOB').value = '';
-            document.getElementById('regGender').value = '';
-            document.getElementById('regAddress').value = '';
-            document.getElementById('regCity').value = '';
-            document.getElementById('regProvince').value = '';
-            document.getElementById('regEducation').value = '';
-            document.getElementById('regMajor').value = '';
-            document.getElementById('regUniversity').value = '';
-            document.getElementById('regGradYear').value = '';
-            document.getElementById('regExperience').value = '0';
-            document.getElementById('regSalary').value = '';
-            skills = [];
-            renderSkills();
-        }
-        
-        // Enter key support for login
-        document.addEventListener('DOMContentLoaded', function() {
-            const loginPassword = document.getElementById('loginPassword');
-            if (loginPassword) {
-                loginPassword.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        login();
-                    }
-                });
-            }
-        });
-    </script>
+<script>
+/* ===========================================================
+   KONFIGURASI SUPABASE
+   Ganti URL dan KEY sesuai kredensial proyek kamu
+=========================================================== */
+const SUPABASE_URL = 'https://hatsthxismcmiyqbbngq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhdHN0aHhpc21jbWl5cWJibmdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MDk2ODksImV4cCI6MjA3MDQ4NTY4OX0._AKeQOYM94Tshs42rEO7FQheZkkkkULOLuTgQWOMzsY';
+
+/* ===========================================================
+   INISIALISASI SUPABASE
+=========================================================== */
+let supabase = null;
+let currentUser = null;
+let skills = [];
+
+async function initializeApp() {
+  try {
+    if (
+      SUPABASE_URL === 'https://your-project.supabase.co' ||
+      SUPABASE_KEY === 'your-anon-key-here'
+    ) {
+      throw new Error('Kredensial Supabase belum diisi!');
+    }
+
+    // ✅ inisialisasi client yang benar
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Tes koneksi sederhana
+    const { error } = await supabase.from('job_seekers').select('id').limit(1);
+    if (error) throw new Error('Koneksi gagal: ' + error.message);
+
+    showMainApp();
+  } catch (error) {
+    showConnectionError(error.message);
+  }
+}
+
+/* ===========================================================
+   UI & UTILITIES
+=========================================================== */
+function showMainApp() {
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('connectionError').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+}
+
+function showConnectionError(message) {
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('connectionError').style.display = 'block';
+  document.getElementById('errorMessage').innerHTML = message;
+}
+
+function retryConnection() {
+  document.getElementById('connectionError').style.display = 'none';
+  document.getElementById('loadingScreen').style.display = 'block';
+  setTimeout(initializeApp, 500);
+}
+
+window.addEventListener('load', function () {
+  setTimeout(initializeApp, 1000);
+});
+
+function showStatus(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'status show ' + type;
+}
+
+function hideAllStatus() {
+  document.querySelectorAll('.status').forEach((el) => el.classList.remove('show'));
+}
+
+/* ===========================================================
+   REGISTER (PAKAI FUNCTION SQL register_user)
+=========================================================== */
+async function register() {
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const fullName = document.getElementById('regFullName').value.trim();
+
+  if (!email || !password || !fullName) {
+    showStatus('registerStatus', '❌ Email, password, dan nama wajib diisi!', 'error');
+    return;
+  }
+
+  showStatus('registerStatus', '⏳ Mendaftarkan akun...', 'info');
+
+  try {
+    const { error } = await supabase.rpc('register_user', {
+      p_email: email,
+      p_password: password,
+      p_full_name: fullName,
+    });
+
+    if (error) throw error;
+
+    showStatus('registerStatus', '✅ Akun berhasil dibuat!', 'success');
+    clearRegisterForm();
+  } catch (error) {
+    showStatus('registerStatus', '❌ ' + error.message, 'error');
+  }
+}
+
+/* ===========================================================
+   LOGIN (PAKAI FUNCTION SQL login_user)
+=========================================================== */
+async function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  if (!email || !password) {
+    showStatus('loginStatus', '❌ Email dan password wajib diisi!', 'error');
+    return;
+  }
+
+  showStatus('loginStatus', '⏳ Login...', 'info');
+
+  try {
+    const { data, error } = await supabase.rpc('login_user', {
+      p_email: email,
+      p_password: password,
+    });
+
+    if (error || !data || data.length === 0) {
+      throw new Error('Email atau password salah!');
+    }
+
+    currentUser = data[0];
+    showStatus('loginStatus', '✅ Login berhasil!', 'success');
+    setTimeout(showProfile, 1000);
+  } catch (error) {
+    showStatus('loginStatus', '❌ ' + error.message, 'error');
+  }
+}
+
+/* ===========================================================
+   PROFIL & LOGOUT
+=========================================================== */
+function showProfile() {
+  document.getElementById('authSection').style.display = 'none';
+  document.getElementById('profileSection').classList.add('active');
+  loadProfile();
+}
+
+async function loadProfile() {
+  if (!currentUser) return;
+  const { data: applications } = await supabase
+    .from('job_applications')
+    .select('*')
+    .eq('job_seeker_id', currentUser.id)
+    .order('application_date', { ascending: false });
+
+  document.getElementById('profileContent').innerHTML = `
+    <div class="profile-card">
+      <h3>👤 Informasi Pribadi</h3>
+      <div class="profile-item"><span class="profile-label">Nama:</span><span class="profile-value">${currentUser.full_name}</span></div>
+      <div class="profile-item"><span class="profile-label">Email:</span><span class="profile-value">${currentUser.email}</span></div>
+      <div class="profile-item"><span class="profile-label">Status Akun:</span><span class="profile-value" style="color: #28a745; font-weight: bold;">✅ Aktif</span></div>
+    </div>
+    ${applications && applications.length > 0 ? `
+      <div class="profile-card">
+        <h3>📝 Riwayat Lamaran (${applications.length})</h3>
+        ${applications.map(app => `
+          <div class="profile-item" style="display:block; padding:10px 0;">
+            <strong>${app.company_name}</strong> — ${app.position}<br>
+            <small>${new Date(app.application_date).toLocaleDateString('id-ID')}</small>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+  `;
+}
+
+function logout() {
+  currentUser = null;
+  document.getElementById('profileSection').classList.remove('active');
+  document.getElementById('authSection').style.display = 'block';
+  hideAllStatus();
+  showStatus('loginStatus', '✅ Logout berhasil!', 'success');
+}
+
+/* ===========================================================
+   FORM HELPER
+=========================================================== */
+function clearRegisterForm() {
+  document.querySelectorAll('#registerForm input, #registerForm select, #registerForm textarea')
+    .forEach(el => el.value = '');
+}
+
+/* ===========================================================
+   TAB LOGIN/REGISTER
+=========================================================== */
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('.auth-content').forEach(c => c.classList.remove('active'));
+  document.getElementById(tab + 'Form').classList.add('active');
+  hideAllStatus();
+}
+</script>
+
 </body>
 </html>
