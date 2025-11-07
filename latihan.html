@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Seeker - Sistem Pencari Kerja</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        /* Loading Screen */
+        .loading-screen {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .loading-subtext {
+            color: #999;
+            font-size: 14px;
+        }
+        
+        /* Connection Error */
+        .connection-error {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .error-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        
+        .error-title {
+            color: #e74c3c;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .error-message {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        /* Main App */
+        .main-app {
+            display: none;
+        }
+        
+        .connection-status {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            background: #f8f9ff;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .auth-tab:hover {
+            background: #e8ebff;
+        }
+        
+        .auth-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .auth-content {
+            display: none;
+        }
+        
+        .auth-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        label .required {
+            color: #e74c3c;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            box-shadow: 0 10px 20px rgba(108, 117, 125, 0.4);
+        }
+        
+        .btn-retry {
+            background: #e74c3c;
+            width: auto;
+            padding: 12px 30px;
+            display: inline-block;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            white-space: pre-line;
+        }
+        
+        .status.show {
+            display: block;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .profile-section {
+            display: none;
+        }
+        
+        .profile-section.active {
+            display: block;
+        }
+        
+        .profile-card {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .profile-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .profile-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .profile-item:last-child {
+            border-bottom: none;
+        }
+        
+        .profile-label {
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .profile-value {
+            color: #333;
+            text-align: right;
+        }
+        
+        .skills-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .skills-input input {
+            flex: 1;
+        }
+        
+        .skills-input button {
+            width: auto;
+            padding: 12px 20px;
+            margin: 0;
+        }
+        
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .skill-tag {
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .skill-tag button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+            width: auto;
+            margin: 0;
+            font-size: 16px;
+            line-height: 1;
+        }
+        
+        .demo-info {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .demo-info strong {
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💼 Job Seeker</h1>
+            <p>Sistem Manajemen Pencari Kerja</p>
+        </div>
+        
+        <div class="content">
+            <!-- Loading Screen -->
+            <div id="loadingScreen" class="loading-screen">
+                <div class="spinner"></div>
+                <div class="loading-text">Menghubungkan ke Database...</div>
+                <div class="loading-subtext">Mohon tunggu sebentar</div>
+            </div>
+            
+            <!-- Connection Error -->
+            <div id="connectionError" class="connection-error">
+                <div class="error-icon">⚠️</div>
+                <div class="error-title">Koneksi Gagal</div>
+                <div class="error-message" id="errorMessage">
+                    Tidak dapat terhubung ke database Supabase.<br>
+                    Pastikan URL dan Key sudah benar.
+                </div>
+                <button class="btn-retry" onclick="retryConnection()">🔄 Coba Lagi</button>
+            </div>
+            
+            <!-- Main App -->
+            <div id="mainApp" class="main-app">
+                <div class="connection-status">
+                    ✅ Terhubung ke Database
+                </div>
+                
+                <!-- Auth Section (Login/Register) -->
+                <div id="authSection">
+                    <div class="auth-tabs">
+                        <div class="auth-tab active" onclick="switchAuthTab('login')">🔐 Login</div>
+                        <div class="auth-tab" onclick="switchAuthTab('register')">📝 Register</div>
+                    </div>
+                    
+                    <!-- Login Form -->
+                    <div id="loginForm" class="auth-content active">
+                        <h2 style="margin-bottom: 20px; color: #333;">Masuk ke Akun</h2>
+                        
+                        <div class="form-group">
+                            <label>Email <span class="required">*</span></label>
+                            <input type="email" id="loginEmail" placeholder="contoh@email.com" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Password <span class="required">*</span></label>
+                            <input type="password" id="loginPassword" placeholder="Masukkan password" required>
+                        </div>
+                        
+                        <button onclick="login()">🔐 Login</button>
+                        
+                        <div id="loginStatus" class="status"></div>
+                        
+                        <div class="demo-info">
+                            <strong>💡 Akun Demo:</strong>
+                            Email: <strong>budi.santoso@email.com</strong><br>
+                            Password: <strong>password123</strong>
+                        </div>
+                    </div>
+                    
+                    <!-- Register Form -->
+                    <div id="registerForm" class="auth-content">
+                        <h2 style="margin-bottom: 20px; color: #333;">Daftar Akun Baru</h2>
+                        
+                        <div class="form-group">
+                            <label>Email <span class="required">*</span></label>
+                            <input type="email" id="regEmail" placeholder="contoh@email.com" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Password <span class="required">*</span></label>
+                            <input type="password" id="regPassword" placeholder="Min. 6 karakter" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Nama Lengkap <span class="required">*</span></label>
+                            <input type="text" id="regFullName" placeholder="Nama lengkap Anda" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>No. Telepon</label>
+                            <input type="tel" id="regPhone" placeholder="08123456789">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tanggal Lahir</label>
+                                <input type="date" id="regDOB">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Jenis Kelamin</label>
+                                <select id="regGender">
+                                    <option value="">Pilih</option>
+                                    <option value="Laki-laki">Laki-laki</option>
+                                    <option value="Perempuan">Perempuan</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Alamat</label>
+                            <textarea id="regAddress" placeholder="Alamat lengkap"></textarea>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Kota</label>
+                                <input type="text" id="regCity" placeholder="Contoh: Jakarta">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Provinsi</label>
+                                <input type="text" id="regProvince" placeholder="Contoh: DKI Jakarta">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Pendidikan Terakhir</label>
+                            <select id="regEducation">
+                                <option value="">Pilih</option>
+                                <option value="SMA/SMK">SMA/SMK</option>
+                                <option value="D3">D3</option>
+                                <option value="S1">S1</option>
+                                <option value="S2">S2</option>
+                                <option value="S3">S3</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Jurusan</label>
+                                <input type="text" id="regMajor" placeholder="Contoh: Teknik Informatika">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Tahun Lulus</label>
+                                <input type="number" id="regGradYear" min="1980" max="2030" placeholder="2020">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Universitas</label>
+                            <input type="text" id="regUniversity" placeholder="Nama universitas">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Skills</label>
+                            <div class="skills-input">
+                                <input type="text" id="skillInput" placeholder="Tambah skill" onkeypress="if(event.key==='Enter'){addSkill();event.preventDefault();}">
+                                <button type="button" onclick="addSkill()">+ Tambah</button>
+                            </div>
+                            <div class="skills-list" id="skillsList"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Pengalaman Kerja (tahun)</label>
+                            <input type="number" id="regExperience" min="0" max="50" value="0">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Gaji yang Diharapkan (Rp)</label>
+                            <input type="number" id="regSalary" placeholder="5000000" min="0">
+                        </div>
+                        
+                        <button onclick="register()">🚀 Daftar Sekarang</button>
+                        
+                        <div id="registerStatus" class="status"></div>
+                    </div>
+                </div>
+                
+                <!-- Profile Section -->
+                <div id="profileSection" class="profile-section">
+                    <h2 style="margin-bottom: 20px; color: #333;">Dashboard Saya</h2>
+                    
+                    <div id="profileContent"></div>
+                    
+                    <button class="btn-secondary" onclick="logout()">🚪 Logout</button>
+                    
+                    <div id="profileStatus" class="status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // ⚠️ KONFIGURASI SUPABASE - GANTI DENGAN KREDENSIAL ANDA
+       const SUPABASE_URL = 'https://hatsthxismcmiyqbbngq.supabase.co';
+       const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhdHN0aHhpc21jbWl5cWJibmdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MDk2ODksImV4cCI6MjA3MDQ4NTY4OX0._AKeQOYM94Tshs42rEO7FQheZkkkkULOLuTgQWOMzsY';
+        
+        let supabase = null;
+        let currentUser = null;
+        let skills = [];
+        
+        // Initialize and Check Connection
+        async function initializeApp() {
+            try {
+                // Validate config
+                if (SUPABASE_URL === 'https://your-project.supabase.co' || SUPABASE_KEY === 'your-anon-key-here') {
+                    throw new Error('Kredensial Supabase belum diisi! Silakan update SUPABASE_URL dan SUPABASE_KEY di kode.');
+                }
+                
+                // Initialize Supabase
+                supabase = supabase_js.createClient(SUPABASE_URL, SUPABASE_KEY);
+                
+                // Test connection with simple query
+                const { data, error } = await supabase
+                    .from('job_seekers')
+                    .select('count')
+                    .limit(1);
+                
+                if (error) {
+                    throw new Error('Koneksi gagal: ' + error.message);
+                }
+                
+                // Connection successful
+                showMainApp();
+                
+            } catch (error) {
+                showConnectionError(error.message);
+            }
+        }
+        
+        function showMainApp() {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('connectionError').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+        }
+        
+        function showConnectionError(message) {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('connectionError').style.display = 'block';
+            document.getElementById('errorMessage').innerHTML = message;
+        }
+        
+        function retryConnection() {
+            document.getElementById('connectionError').style.display = 'none';
+            document.getElementById('loadingScreen').style.display = 'block';
+            setTimeout(initializeApp, 500);
+        }
+        
+        // Wait for page load
+        window.addEventListener('load', function() {
+            setTimeout(initializeApp, 1000);
+        });
+        
+        // Switch Auth Tab
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.auth-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tab + 'Form').classList.add('active');
+            
+            hideAllStatus();
+        }
+        
+        // Skills Management
+        function addSkill() {
+            const input = document.getElementById('skillInput');
+            const skill = input.value.trim();
+            
+            if (skill && !skills.includes(skill)) {
+                skills.push(skill);
+                renderSkills();
+                input.value = '';
+            }
+        }
+        
+        function removeSkill(skill) {
+            skills = skills.filter(s => s !== skill);
+            renderSkills();
+        }
+        
+        function renderSkills() {
+            const container = document.getElementById('skillsList');
+            if (skills.length === 0) {
+                container.innerHTML = '<p style="color: #999; font-size: 13px;">Belum ada skill ditambahkan</p>';
+                return;
+            }
+            container.innerHTML = skills.map(skill => `
+                <div class="skill-tag">
+                    ${skill}
+                    <button type="button" onclick="removeSkill('${skill.replace(/'/g, "\\'")}')">×</button>
+                </div>
+            `).join('');
+        }
+        
+        // Register
+        async function register() {
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const fullName = document.getElementById('regFullName').value.trim();
+            
+            if (!email || !password || !fullName) {
+                showStatus('registerStatus', '❌ Email, password, dan nama lengkap wajib diisi!', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showStatus('registerStatus', '❌ Password minimal 6 karakter!', 'error');
+                return;
+            }
+            
+            showStatus('registerStatus', '⏳ Mendaftarkan akun...', 'info');
+            
+            try {
+                const passwordHash = btoa(password);
+                const activationToken = generateToken();
+                const activationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+                
+                const { data, error } = await supabase
+                    .from('job_seekers')
+                    .insert([{
+                        email: email,
+                        password_hash: passwordHash,
+                        full_name: fullName,
+                        phone: document.getElementById('regPhone').value || null,
+                        date_of_birth: document.getElementById('regDOB').value || null,
+                        gender: document.getElementById('regGender').value || null,
+                        address: document.getElementById('regAddress').value || null,
+                        city: document.getElementById('regCity').value || null,
+                        province: document.getElementById('regProvince').value || null,
+                        education_level: document.getElementById('regEducation').value || null,
+                        major: document.getElementById('regMajor').value || null,
+                        university: document.getElementById('regUniversity').value || null,
+                        graduation_year: parseInt(document.getElementById('regGradYear').value) || null,
+                        skills: skills.length > 0 ? skills : null,
+                        work_experience: parseInt(document.getElementById('regExperience').value) || 0,
+                        expected_salary: parseInt(document.getElementById('regSalary').value) || null,
+                        is_active: false,
+                        activation_token: activationToken,
+                        activation_token_expires: activationExpires
+                    }])
+                    .select();
+                
+                if (error) {
+                    if (error.code === '23505') {
+                        throw new Error('Email sudah terdaftar!');
+                    }
+                    throw error;
+                }
+                
+                showStatus('registerStatus', 
+                    `✅ Registrasi berhasil!\n\n` +
+                    `📧 Token Aktivasi Anda:\n${activationToken}\n\n` +
+                    `⚠️ Simpan token ini!\n` +
+                    `Untuk aktivasi, jalankan query di Supabase SQL Editor:\n\n` +
+                    `UPDATE job_seekers SET is_active = true WHERE activation_token = '${activationToken}';\n\n` +
+                    `Token berlaku 24 jam.`, 
+                    'success'
+                );
+                
+                clearRegisterForm();
+                
+            } catch (error) {
+                showStatus('registerStatus', '❌ Error: ' + error.message, 'error');
+            }
+        }
+        
+        // Login
+        async function login() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showStatus('loginStatus', '❌ Email dan password wajib diisi!', 'error');
+                return;
+            }
+            
+            showStatus('loginStatus', '⏳ Login...', 'info');
+            
+            try {
+                const passwordHash = btoa(password);
+                
+                const { data, error } = await supabase
+                    .from('job_seekers')
+                    .select('*')
+                    .eq('email', email)
+                    .eq('password_hash', passwordHash)
+                    .single();
+                
+                if (error || !data) {
+                    throw new Error('Email atau password salah!');
+                }
+                
+                if (!data.is_active) {
+                    showStatus('loginStatus', 
+                        '⚠️ Akun belum diaktivasi!\n\n' +
+                        'Silakan aktifkan akun Anda terlebih dahulu menggunakan token yang dikirim saat registrasi.\n\n' +
+                        'Jalankan query di Supabase SQL Editor:\n' +
+                        'UPDATE job_seekers SET is_active = true WHERE email = \'' + email + '\';', 
+                        'error'
+                    );
+                    return;
+                }
+                
+                currentUser = data;
+                
+                await supabase
+                    .from('job_seekers')
+                    .update({ last_login: new Date().toISOString() })
+                    .eq('id', data.id);
+                
+                showStatus('loginStatus', '✅ Login berhasil!', 'success');
+                
+                setTimeout(() => {
+                    showProfile();
+                }, 1000);
+                
+            } catch (error) {
+                showStatus('loginStatus', '❌ ' + error.message, 'error');
+            }
+        }
+        
+        // Show Profile
+        function showProfile() {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('profileSection').classList.add('active');
+            loadProfile();
+        }
+        
+        // Load Profile
+        async function loadProfile() {
+            if (!currentUser) return;
+            
+            const { data: applications } = await supabase
+                .from('job_applications')
+                .select('*')
+                .eq('job_seeker_id', currentUser.id)
+                .order('application_date', { ascending: false });
+            
+            document.getElementById('profileContent').innerHTML = `
+                <div class="profile-card">
+                    <h3>👤 Informasi Pribadi</h3>
+                    <div class="profile-item">
+                        <span class="profile-label">Nama:</span>
+                        <span class="profile-value">${currentUser.full_name}</span>
+                    </div>
+                    <div class="profile-item">
+                        <span class="profile-label">Email:</span>
+                        <span class="profile-value">${currentUser.email}</span>
+                    </div>
+                    <div class="profile-item">
+                        <span class="profile-label">Telepon:</span>
+                        <span class="profile-value">${currentUser.phone || '-'}</span>
+                    </div>
+                    <div class="profile-item">
+                        <span class="profile-label">Jenis Kelamin:</span>
+                        <span class="profile-value">${currentUser.gender || '-'}</span>
+                    </div>
+                    <div class="profile-item">
+                        <span class="profile-label">Alamat:</span>
+                        <span class="profile-value">${currentUser.city ? currentUser.city + ', ' + currentUser.province : '-'}</span>
+                    </div>
+                    <div class="profile-item">
+                        <span class="profile-label">Status Akun:</span>
+                        <span class="profile-value" style="color: #28a745; font-weight: bold;">✅ Aktif</span>
+                    </div>
+                </div>
+                
+                <div class="profile-card">
+                    <h3>🎓 Pendidikan</h3>
+                    <div class="profile-item">
+                        <span class="profile-label">Pendidikan:</span>
+                        <span class="profile-value">${currentUser.education_level || '-'}</span>
+                    </div>
+                    <div class="profile-item">
+                        <span class="profile-label">Jurusan:</span>
+                        <span class="profile-value">${currentUser.major || '-'}</span>
+                    </div>
+                    <div class="profile-item">
+                        <span class="profile-label">Universitas:</span>
+                        <span class="profile-value">${currentUser.university || '-'}</span>
+                    </div>
+                    <div class="profile-item">
+                        <span class="profile-label">Tahun Lulus:</span>
+                        <span class="profile-value">${currentUser.graduation_year || '-'}</span>
+                    </div>
+                </div>
+                
+                <div class="profile-card">
+                    <h3>💼 Karir</h3>
+                    <div class="profile-item">
+                        <span class="profile-label">Pengalaman:</span>
+                        <span class="profile-value">${currentUser.work_experience} tahun</span>
+                    </div>
+                    <div class="profile-item">
+                        <span class="profile-label">Gaji Diharapkan:</span>
+                        <span class="profile-value">${currentUser.expected_salary ? 'Rp ' + currentUser.expected_salary.toLocaleString('id-ID') : '-'}</span>
+                    </div>
+                    <div class="profile-item" style="display: block;">
+                        <span class="profile-label" style="margin-bottom: 10px;">Skills:</span>
+                        <div class="skills-list">
+                            ${currentUser.skills && currentUser.skills.length > 0 ? 
+                                currentUser.skills.map(skill => `<div class="skill-tag">${skill}</div>`).join('') : 
+                                '<span style="color: #999; font-size: 13px;">Belum ada skills</span>'}
+                        </div>
+                    </div>
+                </div>
+                
+                ${applications && applications.length > 0 ? `
+                <div class="profile-card">
+                    <h3>📝 Riwayat Lamaran (${applications.length})</h3>
+                    ${applications.map(app => `
+                        <div class="profile-item" style="display: block; padding: 15px 0;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <strong style="color: #667eea;">${app.company_name}</strong>
+                                <span style="font-size: 12px; color: #999;">${new Date(app.application_date).toLocaleDateString('id-ID')}</span>
+                            </div>
+                            <div style="color: #666; margin-bottom: 5px;">${app.position}</div>
+                            <div>
+                                <span style="padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; 
+                                    ${app.status === 'accepted' ? 'background: #d4edda; color: #155724;' : 
+                                      app.status === 'rejected' ? 'background: #f8d7da; color: #721c24;' : 
+                                      app.status === 'interview' ? 'background: #d1ecf1; color: #0c5460;' : 
+                                      'background: #fff3cd; color: #856404;'}">
+                                    ${app.status === 'accepted' ? '✅ Diterima' : 
+                                      app.status === 'rejected' ? '❌ Ditolak' : 
+                                      app.status === 'interview' ? '📞 Interview' : 
+                                      '⏳ Pending'}
+                                </span>
+                            </div>
+                            ${app.notes ? `<div style="margin-top: 8px; font-size: 13px; color: #666; font-style: italic;">${app.notes}</div>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+                ` : ''}
+            `;
+        }
+        
+        // Logout
+        function logout() {
+            currentUser = null;
+            document.getElementById('profileSection').classList.remove('active');
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            hideAllStatus();
+            showStatus('loginStatus', '✅ Logout berhasil!', 'success');
+        }
+        
+        // Utilities
+        function generateToken() {
+            return Math.random().toString(36).substr(2, 9) + Math.random().toString(36).substr(2, 9);
+        }
+        
+        function showStatus(elementId, message, type) {
+            const statusElement = document.getElementById(elementId);
+            statusElement.textContent = message;
+            statusElement.className = 'status show ' + type;
+        }
+        
+        function hideAllStatus() {
+            document.querySelectorAll('.status').forEach(el => el.classList.remove('show'));
+        }
+        
+        function clearRegisterForm() {
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regFullName').value = '';
+            document.getElementById('regPhone').value = '';
+            document.getElementById('regDOB').value = '';
+            document.getElementById('regGender').value = '';
+            document.getElementById('regAddress').value = '';
+            document.getElementById('regCity').value = '';
+            document.getElementById('regProvince').value = '';
+            document.getElementById('regEducation').value = '';
+            document.getElementById('regMajor').value = '';
+            document.getElementById('regUniversity').value = '';
+            document.getElementById('regGradYear').value = '';
+            document.getElementById('regExperience').value = '0';
+            document.getElementById('regSalary').value = '';
+            skills = [];
+            renderSkills();
+        }
+        
+        // Enter key support for login
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginPassword = document.getElementById('loginPassword');
+            if (loginPassword) {
+                loginPassword.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        login();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
