@@ -698,10 +698,12 @@ async function uploadCV() {
   };
 
   try {
-    const response = await fetch('https://script.google.com/macros/s/AKfycbxUmRh4isWxEGEkAtYNgvntsp_jefIVweFnQS9LF1jfDkHJzrFJpBlenW2yeghrYGra/exec', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    const proxyUrl = "https://corsproxy.io/?";
+    const endpoint = "https://script.google.com/macros/s/AKfycbzFPE3burU53jpLAStj_ZD4P4eody_dqmtUyDI2Tc1Qv8nlKdKL0pXPK6pQ-7iHLGTf/exec";
+    const response = await fetch(proxyUrl + encodeURIComponent(endpoint), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
     });
     const result = await response.json();
     if (result.status === 'success') {
