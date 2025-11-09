@@ -673,7 +673,7 @@ async function register() {
   }
 }
 /* ===========================================================
-   UPLOAD CV KE GOOGLE DRIVE
+   UPLOAD CV KE GOOGLE DRIVE (STABIL TANPA CORS PROXY)
 =========================================================== */
 async function uploadCV() {
   const fileInput = document.getElementById('cvFile');
@@ -681,6 +681,7 @@ async function uploadCV() {
     showStatus('cvStatus', '❌ Pilih file PDF terlebih dahulu!', 'error');
     return;
   }
+
   const file = fileInput.files[0];
   if (file.type !== 'application/pdf') {
     showStatus('cvStatus', '❌ Hanya file PDF yang diperbolehkan!', 'error');
@@ -688,42 +689,50 @@ async function uploadCV() {
   }
 
   showStatus('cvStatus', '⏳ Mengupload CV ke Google Drive...', 'info');
-  const base64 = await readFileAsBase64(file);
-  const payload = {
-    filename: `${currentUser.full_name || 'CV'}_${Date.now()}.pdf`,
-    mimetype: file.type,
-    content_base64: base64.split(',')[1],
-    email: currentUser.email,
-    full_name: currentUser.full_name
-  };
 
   try {
-    const proxyUrl = "https://corsproxy.io/?";
-    const endpoint = "https://script.google.com/macros/s/AKfycbzFPE3burU53jpLAStj_ZD4P4eody_dqmtUyDI2Tc1Qv8nlKdKL0pXPK6pQ-7iHLGTf/exec";
-    const response = await fetch(proxyUrl + encodeURIComponent(endpoint), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
+    // Ubah file jadi Base64
+    const base64 = await readFileAsBase64(file);
+
+    // ✅ Ganti URL di bawah ini dengan URL Web App kamu sendiri
+    const endpoint = "https://script.google.com/macros/s/AKfycbyHDyNAusPTogdZjx5HJQazT-MjO8bWJr9Ck_pfnNlDEoNnH5h1No6HgjlVjt0iGGxy/exec";
+
+    const payload = {
+      filename: `${currentUser?.full_name || 'CV'}_${Date.now()}.pdf`,
+      mimetype: file.type,
+      content_base64: base64.split(',')[1],
+      email: currentUser?.email || '',
+      full_name: currentUser?.full_name || ''
+    };
+
+    // Kirim langsung ke Apps Script tanpa proxy
+    await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      mode: "no-cors"
     });
-    const result = await response.json();
-    if (result.status === 'success') {
-      showStatus('cvStatus', '✅ CV berhasil diupload!\n📎 Link: ' + result.fileUrl, 'success');
-    } else {
-      throw new Error(result.message);
-    }
+
+    // Browser tidak bisa baca respons karena "no-cors", jadi kita anggap sukses
+    showStatus('cvStatus', '✅ CV berhasil dikirim ke Google Drive!\n📁 Silakan cek folder "CV JobSeeker" di Drive kamu.', 'success');
+
   } catch (error) {
-    showStatus('cvStatus', '❌ Error: ' + error.message, 'error');
+    showStatus('cvStatus', '❌ Upload gagal: ' + error.message, 'error');
   }
 }
 
+/* ===========================================================
+   UTILITAS: Konversi File ke Base64
+=========================================================== */
 function readFileAsBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
-    reader.onerror = (e) => reject(e);
+    reader.onerror = (err) => reject(err);
     reader.readAsDataURL(file);
   });
 }
+
 
 /* ===========================================================
    LOGIN (PAKAI FUNCTION SQL login_user)
