@@ -34,5 +34,6 @@ app.options("/upload", (req, res) => {
 });
 
 app.listen(3000, () =>
-  console.log("✅ Proxy berjalan di http://localhost:3000/upload")
+  console.log("✅ Proxy berjalan di https://vercel.com/adam-s-projects-28c68d94/program-cv/upload")
 );
+
