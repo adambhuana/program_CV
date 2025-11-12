@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/proxy.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/upload",
+      "dest": "/api/proxy.js"
+    }
+  ],
+  "installCommand": "npm install express",
+  "buildCommand": "npm run build"
+}
