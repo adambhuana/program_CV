@@ -694,7 +694,7 @@ async function uploadCV() {
     const base64 = await readFileAsBase64(file);
     const filename = `${currentUser?.full_name || "CV"}_${Date.now()}.pdf`;
 
-    const endpoint = "http://localhost:3000/upload"; // tetap lewat proxy
+    const endpoint = "https://program-cv.vercel.app/upload"; // tetap lewat proxy
     const payload = {
       filename,
       mimetype: file.type,
@@ -870,3 +870,4 @@ function switchAuthTab(tab) {
 
 </body>
 </html>
+
