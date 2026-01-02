@@ -577,11 +577,11 @@
 =========================================================== */
 const SUPABASE_URL = 'https://hatsthxismcmiyqbbngq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhdHN0aHhpc21jbWl5cWJibmdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MDk2ODksImV4cCI6MjA3MDQ4NTY4OX0._AKeQOYM94Tshs42rEO7FQheZkkkkULOLuTgQWOMzsY';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 /* ===========================================================
    INISIALISASI SUPABASE
 =========================================================== */
 //let supabase = null;
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUser = null;
 let skills = [];
 
@@ -595,7 +595,7 @@ async function initializeApp() {
     }
 
     // inisialisasi client (GLOBAL)
-    const { error } = await supabase.from('job_seekers').select('id').limit(1);
+    const { error } = await db.from('job_seekers').select('id').limit(1);
     if (error) throw new Error('Koneksi gagal: ' + error.message);
 
     showMainApp();
@@ -713,7 +713,7 @@ async function uploadCV() {
     const fileUrl = result.fileUrl;
     const now = new Date().toISOString();
 
-    const { error } = await supabase
+    const { error } = await db
       .from("job_seekers")
       .update({ cv_url: fileUrl, updated_at: now })
       .eq("id", currentUser.id);
@@ -725,7 +725,7 @@ async function uploadCV() {
 
     // Ambil ulang data user setelah 2 detik
     setTimeout(async () => {
-      const { data } = await supabase
+      const { data } = await db
         .from("job_seekers")
         .select("*")
         .eq("id", currentUser.id)
@@ -763,7 +763,7 @@ async function login() {
   showStatus('loginStatus', '⏳ Login...', 'info');
 
   try {
-    const { data, error } = await supabase.rpc('login_user', {
+    const { data, error } = await db.rpc('login_user', {
       p_email: email,
       p_password: password,
     });
@@ -792,7 +792,7 @@ function showProfile() {
 async function loadProfile(successMsg = "") {
   if (!currentUser) return;
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("job_seekers")
     .select("*")
     .eq("id", currentUser.id)
@@ -867,6 +867,7 @@ function switchAuthTab(tab) {
 
 </body>
 </html>
+
 
 
 
