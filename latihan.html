@@ -595,7 +595,7 @@ async function initializeApp() {
     }
 
     // inisialisasi client (GLOBAL)
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const { error } = await supabase.from('job_seekers').select('id').limit(1);
     if (error) throw new Error('Koneksi gagal: ' + error.message);
@@ -869,6 +869,7 @@ function switchAuthTab(tab) {
 
 </body>
 </html>
+
 
 
 
