@@ -577,7 +577,7 @@
 =========================================================== */
 const SUPABASE_URL = 'https://hatsthxismcmiyqbbngq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhdHN0aHhpc21jbWl5cWJibmdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MDk2ODksImV4cCI6MjA3MDQ4NTY4OX0._AKeQOYM94Tshs42rEO7FQheZkkkkULOLuTgQWOMzsY';
-
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 /* ===========================================================
    INISIALISASI SUPABASE
 =========================================================== */
@@ -595,8 +595,6 @@ async function initializeApp() {
     }
 
     // inisialisasi client (GLOBAL)
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
     const { error } = await supabase.from('job_seekers').select('id').limit(1);
     if (error) throw new Error('Koneksi gagal: ' + error.message);
 
@@ -869,6 +867,7 @@ function switchAuthTab(tab) {
 
 </body>
 </html>
+
 
 
 
