@@ -167,14 +167,14 @@
   <script>
     const SUPABASE_URL = "https://hatsthxismcmiyqbbngq.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhdHN0aHhpc21jbWl5cWJibmdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MDk2ODksImV4cCI6MjA3MDQ4NTY4OX0._AKeQOYM94Tshs42rEO7FQheZkkkkULOLuTgQWOMzsY";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function loginRecruiter(){
       const email=document.getElementById("recruiterEmail").value.trim();
       const pass=document.getElementById("recruiterPassword").value.trim();
       const status=document.getElementById("loginStatus");
       status.textContent="⏳ Memeriksa kredensial...";status.className="status";
-      const {data,error}=await supabase.from("recruiter").select("*").eq("email",email).single();
+      const {data,error}=await db.from("recruiter").select("*").eq("email",email).single();
       if(error||!data){status.textContent="❌ Email tidak ditemukan!";status.className="status error";return;}
       if(data.password!==pass){status.textContent="❌ Password salah!";status.className="status error";return;}
       sessionStorage.setItem("recruiter_logged_in","true");showDashboard();
@@ -199,7 +199,7 @@
     async function loadCVList(){
       const tbody=document.getElementById("cvTableBody");
       tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;">⏳ Memuat data...</td></tr>`;
-      const {data,error}=await supabase.from("job_seekers").select("full_name,email,updated_at,cv_url").order("updated_at",{ascending:false});
+      const {data,error}=await db.from("job_seekers").select("full_name,email,updated_at,cv_url").order("updated_at",{ascending:false});
       if(error){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:red;">Gagal memuat data</td></tr>`;return;}
       if(!data.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;">Belum ada CV diupload</td></tr>`;return;}
       tbody.innerHTML=data.map((r,i)=>`<tr><td>${i+1}</td><td>${r.full_name}</td><td>${r.email}</td><td>${new Date(r.updated_at).toLocaleString("id-ID")}</td><td>${r.cv_url?`<a href="${r.cv_url}" target="_blank">🔗 Lihat</a>`:'-'}</td></tr>`).join("");
@@ -218,3 +218,4 @@
   </script>
 </body>
 </html>
+
