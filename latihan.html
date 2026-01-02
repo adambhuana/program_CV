@@ -581,7 +581,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 /* ===========================================================
    INISIALISASI SUPABASE
 =========================================================== */
-let supabase = null;
+//let supabase = null;
 let currentUser = null;
 let skills = [];
 
@@ -595,7 +595,8 @@ async function initializeApp() {
     }
 
     // ✅ inisialisasi client yang benar
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    //supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // Tes koneksi sederhana
     const { error } = await supabase.from('job_seekers').select('id').limit(1);
@@ -870,6 +871,7 @@ function switchAuthTab(tab) {
 
 </body>
 </html>
+
 
 
 
