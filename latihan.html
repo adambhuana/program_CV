@@ -588,8 +588,8 @@ let skills = [];
 async function initializeApp() {
   try {
     if (
-      SUPABASE_URL === ''; ||
-      SUPABASE_KEY ===  '';
+      SUPABASE_URL === 'https://your-project.supabase.co' ||
+      SUPABASE_KEY === 'your-anon-key-here'
 
     ) {
       throw new Error('Kredensial Supabase belum diisi!');
@@ -872,6 +872,7 @@ function switchAuthTab(tab) {
 
 </body>
 </html>
+
 
 
 
