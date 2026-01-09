@@ -107,15 +107,79 @@
       .hero { grid-template-columns: 1fr; padding: 40px 20px; }
       .features { padding: 40px 20px; }
     }
+    /* ===== HEADER NAV RESPONSIVE ===== */
+    .header {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: #fff;
+      padding: 20px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+    
+    .menu-toggle {
+      display: none;
+      font-size: 1.8rem;
+      cursor: pointer;
+    }
+    
+    /* Desktop nav */
+    nav {
+      display: flex;
+      gap: 20px;
+    }
+    
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    /* ===== MOBILE ===== */
+    @media (max-width: 768px) {
+      .menu-toggle {
+        display: block;
+      }
+    
+      nav {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        width: 100%;
+        background: #4f46e5;
+        flex-direction: column;
+        align-items: center;
+        display: none;
+        padding: 20px 0;
+      }
+    
+      nav.active {
+        display: flex;
+      }
+    
+      nav a {
+        padding: 12px 0;
+        width: 100%;
+        text-align: center;
+      }
+    }
+
   </style>
 </head>
 <body>
 
-<header>
+<header class="header">
   <h1>AI CV Analyzer</h1>
-  <nav>
+
+  <!-- Hamburger -->
+  <div class="menu-toggle" id="menuToggle">
+    ☰
+  </div>
+
+  <nav id="navMenu">
     <a href="index.html">Beranda</a>
-    <a href="talent.html">Talent / Pencari Kerja</a>
+    <a href="talent.html">Talent/Pencari Kerja</a>
     <a href="rekruiter.html">Perekrut</a>
   </nav>
 </header>
@@ -162,6 +226,13 @@
 <footer>
   <p>&copy; 2026 Sistem Otomatisasi Analisis CV Berbasis AI. All rights reserved.</p>
 </footer>
+<script>
+  const menuToggle = document.getElementById("menuToggle");
+  const navMenu = document.getElementById("navMenu");
 
+  menuToggle.addEventListener("click", () => {
+    navMenu.classList.toggle("active");
+  });
+</script>
 </body>
 </html>
