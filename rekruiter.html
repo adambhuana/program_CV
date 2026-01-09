@@ -95,6 +95,39 @@
     .login-page button:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(102,126,234,0.3); }
     .status { margin-top: 10px; font-size: 14px; }
     .status.error { color: #c0392b; } .status.success { color: #27ae60; }
+    /* ===== HOME LINK (LOGIN ONLY) ===== */
+    .home-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      text-decoration: none;
+      font-weight: 600;
+      color: #667eea;
+      background: #eef2ff;
+      padding: 8px 16px;
+      border-radius: 999px;
+      transition: all 0.3s ease;
+      animation: pulseHome 2.5s infinite;
+    }
+    
+    .home-link i {
+      font-size: 1.2rem;
+    }
+    
+    .home-link:hover {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 8px 20px rgba(102,126,234,0.4);
+    }
+    
+    /* Subtle pulse animation */
+    @keyframes pulseHome {
+      0% { box-shadow: 0 0 0 0 rgba(102,126,234,0.4); }
+      70% { box-shadow: 0 0 0 12px rgba(102,126,234,0); }
+      100% { box-shadow: 0 0 0 0 rgba(102,126,234,0); }
+    }
 
     /* PAGE SWITCHING */
     .page { display: none; }
@@ -156,6 +189,10 @@
 
   <!-- Login -->
   <div class="login-page" id="loginSection">
+     <a href="index.html" class="home-link">
+        <i class="bi bi-house-door-fill"></i>
+        <span>Home</span>
+      </a>
     <h2>🔐 Login Perekrut</h2>
     <input type="email" id="recruiterEmail" placeholder="Email" required>
     <input type="password" id="recruiterPassword" placeholder="Password" required>
@@ -218,4 +255,5 @@
   </script>
 </body>
 </html>
+
 
